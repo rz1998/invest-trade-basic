@@ -3,7 +3,28 @@ package trade
 import (
 	"github.com/rz1998/invest-basic/types/investBasic"
 	"github.com/rz1998/invest-trade-basic/types/tradeBasic"
+	"reflect"
 )
+
+func NewSpiMD(structSpiMD interface{}) ISpiMD {
+	t := reflect.TypeOf(structSpiMD)
+	if t.Kind() == reflect.Ptr {
+		//指针类型获取真正type需要调用Elem
+		t = t.Elem()
+	}
+	newSpi := reflect.New(t).Interface()
+	return newSpi.(ISpiMD)
+}
+
+func NewSpiTrader(structSpiTrader interface{}) ISpiTrader {
+	t := reflect.TypeOf(structSpiTrader)
+	if t.Kind() == reflect.Ptr {
+		//指针类型获取真正type需要调用Elem
+		t = t.Elem()
+	}
+	newSpi := reflect.New(t).Interface()
+	return newSpi.(ISpiTrader)
+}
 
 type IApiMD interface {
 	SetSpi(spi *ISpiMD)

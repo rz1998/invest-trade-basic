@@ -2,22 +2,12 @@ package trade
 
 import (
 	"fmt"
+	invest "github.com/rz1998/invest-basic"
 	"github.com/rz1998/invest-basic/types/investBasic"
 	"github.com/rz1998/invest-trade-basic/types/tradeBasic"
 	"math"
-	"strings"
 	"sync"
 )
-
-// GetSecInfo 唯一码转换为代码和交易所
-func GetSecInfo(uniqueCode string) (code string, exchangeCD investBasic.ExchangeCD) {
-	contents := strings.Split(uniqueCode, ".")
-	if len(contents) > 1 {
-		return contents[0], investBasic.ExchangeCD(contents[1])
-	} else {
-		return contents[0], ""
-	}
-}
 
 // CalLimitPrice 计算涨跌停价(股票四舍五入)
 func CalLimitPrice(rateStop float64, preClose, tick int64) int64 {
@@ -29,7 +19,7 @@ func CalLimitPrice(rateStop float64, preClose, tick int64) int64 {
 
 // CalTarPrice 根据证券代码计算目标涨跌幅度价格 priceLimit 是涨跌停价，rateTar>0用涨停价，rateTar<0用跌停价
 func CalTarPrice(uniqueCode string, rateTar float64, price, priceLimit int64) int64 {
-	code, exchangeCD := GetSecInfo(uniqueCode)
+	code, exchangeCD := invest.GetSecInfo(uniqueCode)
 	var tick int64
 	switch exchangeCD {
 	case investBasic.SSE, investBasic.SZSE:
@@ -89,7 +79,7 @@ func CalValLeastByFee(rateFeeBrokerage, floorFeeBrokerage float64) float64 {
 
 // 根据代码返回最小下单单位
 func getVolTick(uniqueCode string) int64 {
-	code, exchangeCD := GetSecInfo(uniqueCode)
+	code, exchangeCD := invest.GetSecInfo(uniqueCode)
 	// 默认1
 	var tick int64 = 1
 	switch exchangeCD {
@@ -129,7 +119,7 @@ func GetVolSellableFromAcPos(acPos *tradeBasic.SAcPos) (vol int64) {
 	if acPos == nil {
 		return vol
 	}
-	_, exchangeCD := GetSecInfo(acPos.UniqueCode)
+	_, exchangeCD := invest.GetSecInfo(acPos.UniqueCode)
 	switch exchangeCD {
 	case investBasic.SSE, investBasic.SZSE:
 		// 股票昨仓
