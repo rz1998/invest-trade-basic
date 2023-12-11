@@ -1,12 +1,13 @@
 package trade
 
 import (
-	"fmt"
+	"math"
+	"sync"
+
 	invest "github.com/rz1998/invest-basic"
 	"github.com/rz1998/invest-basic/types/investBasic"
 	"github.com/rz1998/invest-trade-basic/types/tradeBasic"
-	"math"
-	"sync"
+	"github.com/zeromicro/go-zero/core/logx"
 )
 
 // CalLimitPrice 计算涨跌停价(股票四舍五入)
@@ -36,7 +37,7 @@ func CalTarPrice(uniqueCode string, rateTar float64, price, priceLimit int64) in
 			tick = 10
 		}
 	default:
-		fmt.Printf("CalTarPrice unhandled exchangeCD %v\n", exchangeCD)
+		logx.Errorf("CalTarPrice unhandled exchangeCD %v\n", exchangeCD)
 	}
 	if priceLimit < 0 {
 		// 忽略限制
@@ -44,14 +45,14 @@ func CalTarPrice(uniqueCode string, rateTar float64, price, priceLimit int64) in
 	} else {
 		if rateTar > 0 {
 			if price > priceLimit {
-				fmt.Printf("CalTarPrice error, price over limitUpper! rataTar %d price %d priceLimit %d\n", rateTar, price, priceLimit)
+				logx.Infof("CalTarPrice error, price over limitUpper! rataTar %f price %d priceLimit %d\n", rateTar, price, priceLimit)
 				return price
 			} else {
 				return int64(math.Min(float64(priceLimit), float64(CalLimitPrice(rateTar, price, tick))))
 			}
 		} else {
 			if price < priceLimit {
-				fmt.Printf("CalTarPrice error, price under limitLower! rataTar %d price %d priceLimit %d\n", rateTar, price, priceLimit)
+				logx.Infof("CalTarPrice error, price under limitLower! rataTar %f price %d priceLimit %d\n", rateTar, price, priceLimit)
 				return price
 			} else {
 				return int64(math.Max(float64(priceLimit), float64(CalLimitPrice(rateTar, price, tick))))
@@ -95,7 +96,7 @@ func getVolTick(uniqueCode string) int64 {
 			tick = 100
 		}
 	default:
-		fmt.Printf("getVolTick unhandled exchangeCD %v\n", exchangeCD)
+		logx.Errorf("getVolTick unhandled exchangeCD %v\n", exchangeCD)
 	}
 	return tick
 }
@@ -105,13 +106,22 @@ func CalTarVol(uniqueCode string, rateTar float64, vol int64) int64 {
 	return CalLimitVol(rateTar, vol, getVolTick(uniqueCode))
 }
 
-// CalTarVolByVal 根据目标金额，确定目标数量
+// CalTarVolByVal 根据目标金额，确定目标数量（向下取整）
 func CalTarVolByVal(uniqueCode string, val float64, price int64) int64 {
 	//
 	volTheory := val / float64(price) * 10000
 	// 向下取证到目标报单数量上
 	volTick := getVolTick(uniqueCode)
 	return int64(math.Floor(volTheory/float64(volTick))) * volTick
+}
+
+// CalTarVolByValRound 根据目标金额，确定目标数量(四舍五入)
+func CalTarVolByValRound(uniqueCode string, val float64, price int64) int64 {
+	//
+	volTheory := val / float64(price) * 10000
+	// 四舍五入到目标报单数量上
+	volTick := getVolTick(uniqueCode)
+	return int64(math.Round(volTheory/float64(volTick))) * volTick
 }
 
 // GetVolSellableFromAcPos 根据持仓计算可卖数量
@@ -159,11 +169,11 @@ func chooseDirPos(dirTrade investBasic.EDirTrade, flagOffset tradeBasic.EFlagOff
  */
 func UpdateAcPosByOrderInfo(mapAcPos *sync.Map, infoOrder *tradeBasic.SOrderInfo) *tradeBasic.SAcPos {
 	if mapAcPos == nil {
-		fmt.Printf("%s stopped by %s\n", "UpdateAcPosByOrderInfo", "no map acPos")
+		logx.Infof("%s stopped by %s\n", "UpdateAcPosByOrderInfo", "no map acPos")
 		return nil
 	}
 	if infoOrder == nil || infoOrder.ReqOrder == nil || infoOrder.OrderStatus == nil {
-		fmt.Printf("%s stopped by %s\n", "UpdateAcPosByOrderInfo", "no infoOrder")
+		logx.Infof("%s stopped by %s\n", "UpdateAcPosByOrderInfo", "no infoOrder")
 		return nil
 	}
 	// 获取对应持仓
@@ -195,15 +205,13 @@ func UpdateAcPosByOrderInfo(mapAcPos *sync.Map, infoOrder *tradeBasic.SOrderInfo
 		handleTrade(acPos, infoOrder.ReqOrder.FlagOffset, infoOrder.OrderStatus.VolTraded)
 	case tradeBasic.Canceled:
 		handleCancel(acPos, infoOrder.ReqOrder.FlagOffset, infoOrder.OrderStatus.VolTotal)
-		//case PartialTraded:
-		//	fmt.Printf("%s stopped by %s %+v\n", "UpdateAcPosByOrderInfo", "unhandled status", infoOrder)
 	}
 	return acPos
 }
 
 // 处理
 func handleCancel(acPos *tradeBasic.SAcPos, flagOffset tradeBasic.EFlagOffset, volCancel int64) {
-	fmt.Printf("%s old acPos %+v\n", "handleCancel", acPos)
+	logx.Infof("%s old acPos %+v\n", "handleCancel", acPos)
 	// 计算今昨数量
 	var frozenYd int64 = 0
 	var frozenTd int64 = 0
@@ -235,11 +243,11 @@ func handleCancel(acPos *tradeBasic.SAcPos, flagOffset tradeBasic.EFlagOffset, v
 		acPos.VolFrozenYd = 0
 	}
 	acPos.VolFrozenTotal = acPos.VolFrozenYd + acPos.VolFrozenTd
-	fmt.Printf("%s new acPos %+v\n", "handleCancel", acPos)
+	logx.Infof("%s new acPos %+v\n", "handleCancel", acPos)
 }
 
 func handleTrade(acPos *tradeBasic.SAcPos, flagOffset tradeBasic.EFlagOffset, volTrade int64) {
-	fmt.Printf("%s old acPos %+v\n", "handleTrade", acPos)
+	logx.Infof("%s old acPos %+v\n", "handleTrade", acPos)
 	// 计算今昨数量
 	var volYd int64 = 0
 	var volTd int64 = 0
@@ -281,7 +289,7 @@ func handleTrade(acPos *tradeBasic.SAcPos, flagOffset tradeBasic.EFlagOffset, vo
 	}
 	acPos.VolTd = acPos.VolTd + volTd
 	acPos.VolTotal = acPos.VolTotal + volYd + volTd
-	fmt.Printf("%s new acPos %+v\n", "handleTrade", acPos)
+	logx.Infof("%s new acPos %+v\n", "handleTrade", acPos)
 }
 
 // CancelOrderBatch 根据报单方向批量撤单
@@ -294,7 +302,7 @@ func CancelOrderBatch(dir investBasic.EDirTrade, flagOffset tradeBasic.EFlagOffs
 	strMethod := "CancelOrderBatch"
 	var rtns []*tradeBasic.PReqOrderAction
 	if mapOrderInfo == nil {
-		fmt.Printf("%s stopped by %s\n", strMethod, "no mapOrderInfo")
+		logx.Infof("%s stopped by %s\n", strMethod, "no mapOrderInfo")
 		return rtns
 	}
 	mapOrderInfo.Range(func(key, value any) bool {
