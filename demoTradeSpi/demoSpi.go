@@ -3,12 +3,13 @@ package demoTradeSpi
 import (
 	"context"
 	"fmt"
-	"github.com/rz1998/invest-basic/types/investBasic"
-	"github.com/rz1998/invest-trade-basic/types/tradeBasic"
-	"github.com/zeromicro/go-zero/core/logx"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	investBasic "github.com/rz1998/invest-basic"
+	tradeBasic "github.com/rz1998/invest-trade-basic"
+	"github.com/zeromicro/go-zero/core/logx"
 )
 
 type SpiMDPrint struct {
@@ -289,6 +290,9 @@ type SpiTraderCache struct {
 }
 
 func (spi *SpiTraderCache) GetOrderInfo(ucOrder string) (*tradeBasic.SOrderInfo, bool) {
+	if spi.MapOrder == nil {
+		spi.MapOrder = &sync.Map{}
+	}
 	orderAny, ok := spi.MapOrder.Load(ucOrder)
 	if ok {
 		return orderAny.(*tradeBasic.SOrderInfo), ok
@@ -297,6 +301,9 @@ func (spi *SpiTraderCache) GetOrderInfo(ucOrder string) (*tradeBasic.SOrderInfo,
 }
 
 func (spi *SpiTraderCache) GetAcPos(uniqueCode string, dir investBasic.EDirTrade) (*tradeBasic.SAcPos, bool) {
+	if spi.MapPos == nil {
+		spi.MapPos = &sync.Map{}
+	}
 	mapAny, ok := spi.MapPos.Load(uniqueCode)
 	if ok {
 		mapDir := mapAny.(*sync.Map)
@@ -371,7 +378,8 @@ type SpiTraderOuter struct {
 	// OnRtnAcPos 账户持仓查询
 	FuncOnRtnAcPos func(acPos *tradeBasic.SAcPos, isLast bool)
 	// OnRtnAcFund 账户资金查询
-	FuncOnRtnAcFund func(acFund *tradeBasic.SAcFund)
+	FuncOnRtnAcFund   func(acFund *tradeBasic.SAcFund)
+	funcOnRtnTransfer func(infoTransfer *tradeBasic.STransferInfo, isLast bool)
 	// OnFrontDisconnect 前置断开回报
 	FuncOnFrontDisconnect func(reason int)
 	// OnErrRtnOrderInsert 报单错误回报
@@ -398,6 +406,9 @@ func (spi *SpiTraderOuter) OnRtnAcPos(acPos *tradeBasic.SAcPos, isLast bool) {
 // OnRtnAcFund 账户资金查询
 func (spi *SpiTraderOuter) OnRtnAcFund(acFund *tradeBasic.SAcFund) {
 	spi.FuncOnRtnAcFund(acFund)
+}
+func (spi *SpiTraderOuter) OnRtnTransfer(infoTransfer *tradeBasic.STransferInfo, isLast bool) {
+	spi.funcOnRtnTransfer(infoTransfer, isLast)
 }
 
 // OnFrontDisconnect 前置断开回报

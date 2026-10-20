@@ -16,20 +16,19 @@
  *
  * @Author: rz1998 rz1998@126.com
  * @Date: 2023-06-27 14:34:57
- * @LastEditors: rz1998 rz1998@126.com
- * @LastEditTime: 2023-09-17 15:59:27
- * @FilePath: /websocket/mnt/raid0/onedrive/zy/coding/workspace/github.com/rz1998/invest/trade/tradeBasic/interfaces.go
+ * @LastEditors: error: error: git config user.name & please set dead value or install git && error: git config user.email & please set dead value or install git & please set dead value or install git
+ * @LastEditTime: 2024-07-15 00:52:13
+ * @FilePath: /trade/home/rz1998/workspace/github.com/rz1998/invest/trade/tradeBasic/interfaces.go
  * @Description:
  *
  */
 
-package trade
+package tradeBasic
 
 import (
 	"reflect"
 
-	"github.com/rz1998/invest-basic/types/investBasic"
-	"github.com/rz1998/invest-trade-basic/types/tradeBasic"
+	investBasic "github.com/rz1998/invest-basic"
 )
 
 func NewSpiMD(structSpiMD interface{}) ISpiMD {
@@ -55,26 +54,26 @@ func NewSpiTrader(structSpiTrader interface{}) ISpiTrader {
 type IApiMD interface {
 	SetSpi(spi *ISpiMD)
 	GetSpi() *ISpiMD
-	Login(infoAc *tradeBasic.PInfoAc)
+	Login(infoAc *PInfoAc)
 	Logout()
 	Sub(uniqueCodes []string)
 	Unsub(uniqueCodes []string)
-	GetInfoAc() *tradeBasic.PInfoAc
+	GetInfoAc() *PInfoAc
 	IsLogin() bool
 	SetIsLogin(isLogin bool)
 }
 
 type IApiTrader interface {
 	// Login 登录
-	Login(infoAc *tradeBasic.PInfoAc)
+	Login(infoAc *PInfoAc)
 	// Logout 登出
 	Logout()
 	// ReqOrder 报单请求
-	ReqOrder(reqOrder *tradeBasic.PReqOrder)
+	ReqOrder(reqOrder *PReqOrder)
 	// ReqOrderBatch 批量报单请求
-	ReqOrderBatch(reqOrders []*tradeBasic.PReqOrder)
+	ReqOrderBatch(reqOrders []*PReqOrder)
 	// ReqOrderAction 订单操作请求
-	ReqOrderAction(reqOrderAction *tradeBasic.PReqOrderAction)
+	ReqOrderAction(reqOrderAction *PReqOrderAction)
 	// QryAcFund 查询资金
 	QryAcFund()
 	// QryAcLiability 查询负债
@@ -82,7 +81,7 @@ type IApiTrader interface {
 	// QryAcPos 查询持仓
 	QryAcPos()
 	// QryOrder 查询委托
-	QryOrder(orderSys *tradeBasic.SOrderSys)
+	QryOrder(orderSys *SOrderSys)
 	// QryTrade 查询成交
 	QryTrade()
 	// SetSpi 设置回报监听
@@ -90,8 +89,8 @@ type IApiTrader interface {
 	// GetSpi 获取回报监听
 	GetSpi() *ISpiTrader
 	// GetInfoSession 获取会话信息
-	GetInfoSession() *tradeBasic.SInfoSessionTrader
-	GenerateUniqueOrder(orderSys *tradeBasic.SOrderSys) string
+	GetInfoSession() *SInfoSessionTrader
+	GenerateUniqueOrder(orderSys *SOrderSys) string
 }
 
 type ISpiMD interface {
@@ -100,24 +99,26 @@ type ISpiMD interface {
 	// OnFrontDisconnect 前置断开
 	OnFrontDisconnect(reason int)
 	// OnRspSub 订阅行情返回数据
-	OnRspSub(code string, msgError *tradeBasic.SMsgError, idRequest int, isLast bool)
+	OnRspSub(code string, msgError *SMsgError, idRequest int, isLast bool)
 	// OnRspUnsub 取消订阅行情返回数据
-	OnRspUnsub(code string, msgError *tradeBasic.SMsgError, idRequest int, isLast bool)
+	OnRspUnsub(code string, msgError *SMsgError, idRequest int, isLast bool)
 }
 
 type ISpiTrader interface {
 	// OnRtnOrder 报单回报
-	OnRtnOrder(infoOrder *tradeBasic.SOrderInfo, isLast bool)
+	OnRtnOrder(infoOrder *SOrderInfo, isLast bool)
 	// OnRtnTrade 成交回报
-	OnRtnTrade(infoTrader *tradeBasic.STradeInfo, isLast bool)
+	OnRtnTrade(infoTrader *STradeInfo, isLast bool)
 	// OnRtnAcPos 账户持仓查询
-	OnRtnAcPos(acPos *tradeBasic.SAcPos, isLast bool)
+	OnRtnAcPos(acPos *SAcPos, isLast bool)
 	// OnRtnAcFund 账户资金查询
-	OnRtnAcFund(acFund *tradeBasic.SAcFund)
+	OnRtnAcFund(acFund *SAcFund)
+	// OnRtnTransfer 转账回报
+	OnRtnTransfer(transfer *STransferInfo, isLast bool)
 	// OnFrontDisconnect 前置断开回报
 	OnFrontDisconnect(reason int)
 	// OnErrRtnOrderInsert 报单错误回报
-	OnErrRtnOrderInsert(reqOrder *tradeBasic.PReqOrder, msgError *tradeBasic.SMsgError)
+	OnErrRtnOrderInsert(reqOrder *PReqOrder, msgError *SMsgError)
 	// OnErrRtnOrderAction 报单操作错误回报
-	OnErrRtnOrderAction(reqOrderAction *tradeBasic.PReqOrderAction, msgError *tradeBasic.SMsgError)
+	OnErrRtnOrderAction(reqOrderAction *PReqOrderAction, msgError *SMsgError)
 }

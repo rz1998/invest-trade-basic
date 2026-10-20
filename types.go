@@ -2,7 +2,8 @@ package tradeBasic
 
 import (
 	"fmt"
-	"github.com/rz1998/invest-basic/types/investBasic"
+
+	investBasic "github.com/rz1998/invest-basic"
 )
 
 type EFlagOffset uint
@@ -145,6 +146,7 @@ type PAuthTrader struct {
 
 // PInfoAc 用户账户信息
 type PInfoAc struct {
+	ApiName string `json:"apiName"`
 	// 经纪公司代码
 	BrokerId string `json:"brokerId"`
 	// 投资者编号
@@ -173,6 +175,8 @@ type SAcFund struct {
 	Margin float64 `json:"margin"`
 	// 总权益：可用+持仓（支持某些接口）
 	ValBalance float64 `json:"valBalance"`
+	// 账户识别
+	IdAccount string `json:"idAccount,optional"`
 }
 
 // SAcPos 账户持仓
@@ -199,6 +203,8 @@ type SAcPos struct {
 	VolFrozenTd int64 `json:"volFrozenTd"`
 	// 占用保证金
 	Margin float64 `json:"margin"`
+	// 账户识别
+	IdAccount string `json:"idAccount,optional"`
 }
 
 // PReqOrder 报单请求
@@ -290,6 +296,8 @@ type SOrderInfo struct {
 	OrderSys    *SOrderSys    `json:"orderSys"`
 	ReqOrder    *PReqOrder    `json:"reqOrder"`
 	OrderStatus *SOrderStatus `json:"orderStatus"`
+	// 账户识别
+	IdAccount string `json:"idAccount,optional"`
 }
 
 func (infoOrder SOrderInfo) String() string {
@@ -330,8 +338,18 @@ type STradeInfo struct {
 	OrderSys *SOrderSys `json:"orderSys"`
 	// 成交状态信息
 	TradeStatus *STradeStatus `json:"tradeStatus"`
+	// 账户识别
+	IdAccount string `json:"idAccount,optional"`
 }
 
 func (infoTrade STradeInfo) String() string {
 	return fmt.Sprintf("%s %+v %+v %+v", infoTrade.Date, *infoTrade.ReqOrder, *infoTrade.OrderSys, *infoTrade.TradeStatus)
+}
+
+// STransferInfo 转账信息
+type STransferInfo struct {
+	Datetime  string  `json:"datetime"`
+	IdRecord  string  `json:"idRecord"`
+	IdAccount string  `json:"idAccount"`
+	Amount    float64 `json:"amount"`
 }
