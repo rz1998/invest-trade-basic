@@ -73,6 +73,21 @@ func GetVolSellableFromAcPos(acPos *SAcPos) (vol int64) {
 	if acPos == nil {
 		return vol
 	}
+	// 柜台给的权威可卖数量优先 (QMT 的 m_nCanUseVolume).
+	//
+	// 指针非 nil 时一律照用, **包括 0**. 0 是「一股都卖不了」的真实值,
+	// 不是「没有数据」. 早先把它当成缺字段而退回下面的公式, 就是
+	// al-013 2026-10-16 重复下单事故的根因; best_qmt.py 的 v29 是同一
+	// 个修法, 详见 SAcPos.VolCanUse 的注释.
+	//
+	// 指针为 nil (字段不存在, 例如老文件或非 QMT 通道) 时才走公式.
+	if acPos.VolCanUse != nil {
+		vol = *acPos.VolCanUse
+		if vol < 0 {
+			vol = 0
+		}
+		return vol
+	}
 	_, exchangeCD := investBasic.GetSecInfo(acPos.UniqueCode)
 	switch exchangeCD {
 	case investBasic.SSE, investBasic.SZSE:

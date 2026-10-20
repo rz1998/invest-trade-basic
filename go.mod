@@ -5,8 +5,8 @@ go 1.21
 toolchain go1.23.0
 
 replace (
-	github.com/rz1998/invest-basic v0.0.2 => ../../investBasic
-	github.com/rz1998/invest-stra-signal v0.0.1 => ../../stra/signal
+	github.com/rz1998/invest-basic v0.0.2 => /home/rz1998/workspace/investBasic
+	github.com/rz1998/invest-stra-signal v0.0.1 => /home/rz1998/workspace/invest-stra-signal
 )
 
 require (

@@ -201,6 +201,22 @@ type SAcPos struct {
 	VolFrozenYd int64 `json:"volFrozenYd"`
 	// 今仓冻结数量
 	VolFrozenTd int64 `json:"volFrozenTd"`
+	// VolCanUse 是柜台给的权威可卖数量 (QMT 的 m_nCanUseVolume).
+	//
+	// 为什么是指针而不是 int64: 「字段存在且为 0」和「字段不存在」是两件
+	// 完全不同的事. 指针的 nil = 字段不存在, 走下面的 Go 公式
+	// (VolYd - VolFrozenYd); 非 nil = 柜台的权威值, 哪怕是 0 也要照用.
+	//
+	// 把 0 当成「没有数据」而退回公式, 是 2026-10-16 al-013 当日 63 笔
+	// 拒单事故的直接成因: 第一笔卖单受理后柜台在几秒内把可卖量从 900
+	// 翻到 0, 旧逻辑据此推出「仍可卖 900 股」, 同一笔持仓被重复下单
+	// 12 次, 11 次被 251005(可用数量不足) 拒, 而且撤单窗口也撤不掉
+	// (价格不在钓鱼窗口内). best_qmt.py 的 v29 用 can_use==0 即 0
+	// 修掉了它, 这里是同一件事的 Go 侧表达.
+	//
+	// 指针同时保持了 JSON 兼容: 老文件没有这个键, 反序列化出来就是 nil,
+	// 行为与改动前完全一致 —— 对其它使用方零回归.
+	VolCanUse *int64 `json:"volCanUse,omitempty"`
 	// 占用保证金
 	Margin float64 `json:"margin"`
 	// 账户识别
