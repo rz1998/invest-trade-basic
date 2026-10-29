@@ -26,12 +26,12 @@ func int64Ptr(v int64) *int64 { return &v }
 // A present can_use of 0 means "nothing is sellable" -- not "no data".
 func TestVolSellable_CanUseZeroIsZeroNotFallback(t *testing.T) {
 	pos := &SAcPos{
-		UniqueCode:   "600000.SSE",
-		VolTotal:     1000,
-		VolYd:        900,
-		VolTd:        100,
-		VolFrozenYd:  0, // the formula would say 900 sellable
-		VolCanUse:    int64Ptr(0),
+		UniqueCode:  "600000.SSE",
+		VolTotal:    1000,
+		VolYd:       900,
+		VolTd:       100,
+		VolFrozenYd: 0, // the formula would say 900 sellable
+		VolCanUse:   int64Ptr(0),
 	}
 	got := GetVolSellableFromAcPos(pos)
 	if got != 0 {
@@ -150,12 +150,12 @@ func TestVolSellable_NilPosition(t *testing.T) {
 // those routines cannot reach it.
 func TestVolCanUse_SurvivesLocalBookkeeping(t *testing.T) {
 	pos := &SAcPos{
-		UniqueCode:  "600000.SSE",
-		TradeDir:    investBasic.LONG,
-		VolTotal:    1000,
-		VolYd:       900,
-		VolTd:       100,
-		VolCanUse:   int64Ptr(0),
+		UniqueCode: "600000.SSE",
+		TradeDir:   investBasic.LONG,
+		VolTotal:   1000,
+		VolYd:      900,
+		VolTd:      100,
+		VolCanUse:  int64Ptr(0),
 	}
 	// A sell of 100 shares arrives. handleTrade rewrites the frozen/yesterday
 	// numbers; the can_use field must come out untouched.

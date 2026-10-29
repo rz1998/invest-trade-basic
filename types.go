@@ -217,6 +217,17 @@ type SAcPos struct {
 	// 指针同时保持了 JSON 兼容: 老文件没有这个键, 反序列化出来就是 nil,
 	// 行为与改动前完全一致 —— 对其它使用方零回归.
 	VolCanUse *int64 `json:"volCanUse,omitempty"`
+	// InstrumentName 是证券名称 (QMT 的 m_strInstrumentName).
+	//
+	// 为什么加它: 管理台要「股票名称跟在代码后面」, 而名称只有柜台/QMT
+	// 才有 —— 平台侧没有任何别的来源能拿到它。
+	//
+	// ⚠️ 用 omitempty + 指针: 老数据/老上报没有这个键 ⇒ nil ⇒ **零回归**
+	//    (和 VolCanUse 同一个理由: 「没有」和「空」是两件事)。
+	//
+	// ⚠️ QMT 侧字段名见 qmt-sdk/docs/requirements/common/qmt-object-fields.md
+	//    的持仓对象段 (m_strInstrumentName = 证券名称)。
+	InstrumentName *string `json:"instrumentName,omitempty"`
 	// 占用保证金
 	Margin float64 `json:"margin"`
 	// 账户识别
