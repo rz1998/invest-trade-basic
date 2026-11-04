@@ -177,6 +177,28 @@ type SAcFund struct {
 	ValBalance float64 `json:"valBalance"`
 	// 账户识别
 	IdAccount string `json:"idAccount,optional"`
+
+	// ValMarketValue 是**持仓市值** (QMT 的 m_dInstrumentValue, 单位: 元).
+	//
+	// ★★ 为什么它是独立字段, 而不是复用 Margin (MEASURED 2026-11-04):
+	//
+	//	QMT 的资金回调同时给三个不同的数, 含义完全不同:
+	//		m_dBalance         = 账户总资产 (可用 + 持仓市值 + 保证金)
+	//		m_dAvailable       = 可用资金
+	//		m_dInstrumentValue = **持仓市值** (持有证券的总市值)
+	//		m_dMargin          = 保证金占用 (现货恒 0, 期货/融资才有值)
+	//
+	//	owner 拍板 (2026-11-04): NocoBase「客户_账户_余额」表的语义是
+	//		balance = 总资产, available = 可用, margin = **持仓市值**.
+	//
+	//	⇒ 这与 zmq 路线的生产读点完全一致 (zmq/best_qmt.py 的
+	//	   refresh_asset: market_value=float(m_dInstrumentValue)), 也与
+	//	   qmt-sdk 的 go/dbf/convert.go:63 (Margin: num(m, "m_dInstrumentValue"))
+	//	   一致 ⇒ 只有 shm (Go) 路线漏了这个字段, 把它错填成了 m_dMargin
+	//	   ⇒ 现货账户的 margin 恒 0 (页面上的"总市值"永远是 0)。
+	//
+	//	⚠️ 单元: 元 (QMT 的账户字段本来就是元, 不做厘换算).
+	ValMarketValue float64 `json:"valMarketValue"`
 }
 
 // SAcPos 账户持仓
