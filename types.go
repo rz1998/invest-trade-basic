@@ -347,6 +347,26 @@ type SOrderInfo struct {
 	OrderStatus *SOrderStatus `json:"orderStatus"`
 	// 账户识别
 	IdAccount string `json:"idAccount,optional"`
+
+	// Date 是**交易日**, 格式 "20060102" (柜台的 m_strInsertDate)。
+	//
+	// ⚠️ 为什么需要它 (2026-11-05, cron 178 实测)
+	//
+	//	admin 平台的 orders.trade_date 列 (TEXT) 一直是**空的**
+	//	—— 实测全机群 700/700 行全空 ⇒ 平台按业务日期查委托查不出来。
+	//
+	//	而 STradeInfo (成交) **早就有** Date 字段, 并且是好的:
+	//	实测 fills.trade_date 1026/1026 行都有值 ⇒ 成交那条路带了日期,
+	//	委托这条路没带。
+	//
+	//	⚠️ 为什么放在 SOrderInfo 而不是复用 ReqOrder.Timestamp:
+	//	  ReqOrder.Timestamp 是 **epoch 毫秒** (下单时刻), 而
+	//	  trade_date 是**业务日期** ("20060105") —— 两个不同的量纲,
+	//	  平台各有一列。所以这里镜像 STradeInfo.Date 的做法。
+	//
+	//	⚠️ omitempty: 老数据/别的券商路由没有这个键 ⇒ 反序列化出来是空串
+	//	  ⇒ 行为与改动前完全一致 (零回归)。
+	Date string `json:"date,omitempty"`
 }
 
 func (infoOrder SOrderInfo) String() string {
